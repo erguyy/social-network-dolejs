@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Přihlášení</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="auth-wrap">
+    <div class="auth-box">
+        <h1>Přihlášení</h1>
+        <p class="subtitle">Vítej zpět. Přihlas se ke svému účtu.</p>
+
+        <div class="alert" id="alert"></div>
+
+        <div class="form-group">
+            <label>Uživatelské jméno</label>
+            <input type="text" id="username" placeholder="jannovak" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>Heslo</label>
+            <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button class="btn btn-primary" id="btn-login" style="width:100%;justify-content:center;margin-top:4px">
+            Přihlásit se
+        </button>
+
+        <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--muted)">
+            Nemáš účet? <a href="register.html">Zaregistruj se</a>
+        </p>
+    </div>
+</div>
+<script src="api.js"></script>
+<script>
+    requireGuest();
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const alert = document.getElementById('alert');
+        const btn = document.getElementById('btn-login');
+
+        if (!username || !password) {
+            return showAlert(alert, 'Vyplň všechna pole.');
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Přihlašuji...';
+
+        try {
+            const data = await apiFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            window.location.href = 'wall.html';
+        } catch (err) {
+            showAlert(alert, err.message);
+            btn.disabled = false;
+            btn.textContent = 'Přihlásit se';
+        }
+    });
+
+    // Enter key
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+</script>
+</body>
+</html>

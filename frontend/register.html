@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrace</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="auth-wrap">
+    <div class="auth-box">
+        <h1>Registrace</h1>
+        <p class="subtitle">Vytvoř si nový účet.</p>
+
+        <div class="alert" id="alert"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+                <label>Jméno</label>
+                <input type="text" id="first_name" placeholder="Jan">
+            </div>
+            <div class="form-group">
+                <label>Příjmení</label>
+                <input type="text" id="last_name" placeholder="Novák">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Věk</label>
+            <input type="number" id="age" placeholder="20" min="13">
+        </div>
+
+        <div class="form-group">
+            <label>Uživatelské jméno</label>
+            <input type="text" id="username" placeholder="jannovak">
+        </div>
+        <div class="form-group">
+            <label>Heslo</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button class="btn btn-primary" id="btn-register" style="width:100%;justify-content:center;margin-top:4px">
+            Zaregistrovat se
+        </button>
+
+        <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--muted)">
+            Už máš účet? <a href="login.html">Přihlas se</a>
+        </p>
+    </div>
+</div>
+<script src="api.js"></script>
+<script>
+    requireGuest();
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+        const first_name = document.getElementById('first_name').value.trim();
+        const last_name  = document.getElementById('last_name').value.trim();
+        const age        = parseInt(document.getElementById('age').value);
+        const username   = document.getElementById('username').value.trim();
+        const password   = document.getElementById('password').value;
+        const alert      = document.getElementById('alert');
+        const btn        = document.getElementById('btn-register');
+
+        if (!first_name || !last_name || !age || !username || !password) {
+            return showAlert(alert, 'Vyplň všechna pole.');
+        }
+        if (age < 13) {
+            return showAlert(alert, 'Musíš mít alespoň 13 let.');
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Registruji...';
+
+        const formData = new FormData();
+        formData.append('first_name', first_name);
+        formData.append('last_name',  last_name);
+        formData.append('age',        age);
+        formData.append('gender',     'other');
+        formData.append('username',   username);
+        formData.append('password',   password);
+
+        try {
+            await apiFetch('/auth/register', { method: 'POST', body: formData });
+            
+            setTimeout(() => window.location.href = 'login.html', 1200);
+        } catch (err) {
+            showAlert(alert, err.message);
+            btn.disabled = false;
+            btn.textContent = 'Zaregistrovat se';
+        }
+    });
+</script>
+</body>
+</html>

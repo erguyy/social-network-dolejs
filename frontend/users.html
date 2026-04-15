@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uživatelé</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+    <span class="nav-logo">// síť</span>
+    <div class="nav-links">
+        <a href="wall.html" class="nav-auth">Zeď</a>
+        <a href="users.html" class="nav-auth active">Uživatelé</a>
+        <a href="#" class="nav-auth" id="nav-username" style="color:var(--muted);cursor:default"></a>
+        <a href="#" class="nav-auth btn btn-ghost btn-sm" onclick="logout()">Odhlásit</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-title">Uživatelé</div>
+    <div class="card" id="users-list">
+        <div class="empty">Načítám...</div>
+    </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+    requireAuth();
+    setupNav();
+
+    async function loadUsers() {
+        const el = document.getElementById('users-list');
+        try {
+            const users = await apiFetch('/users');
+            if (!users.length) { el.innerHTML = '<div class="empty">Žádní uživatelé.</div>'; return; }
+            el.innerHTML = users.map(u => {
+                const avatarEl = u.avatar
+                    ? `<div class="avatar"><img src="http://localhost:3000/uploads/${u.avatar}" alt=""></div>`
+                    : `<div class="avatar">${u.first_name[0]}${u.last_name[0]}</div>`;
+                const genderMap = { male: 'Muž', female: 'Žena', other: 'Jiné' };
+                return `
+                <div class="user-item">
+                    ${avatarEl}
+                    <div class="user-info">
+                        <div class="user-name">
+                            <a href="user-detail.html?id=${u.id}">${u.first_name} ${u.last_name}</a>
+                        </div>
+                        <div class="user-meta">${genderMap[u.gender] || ''} · ${u.age} let</div>
+                    </div>
+                    <a href="user-detail.html?id=${u.id}" class="btn btn-ghost btn-sm">Profil →</a>
+                </div>`;
+            }).join('');
+        } catch (err) {
+            el.innerHTML = `<div class="empty">${err.message}</div>`;
+        }
+    }
+
+    loadUsers();
+</script>
+</body>
+</html>

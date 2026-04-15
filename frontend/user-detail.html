@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil uživatele</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+    <span class="nav-logo">// síť</span>
+    <div class="nav-links">
+        <a href="wall.html" class="nav-auth">Zeď</a>
+        <a href="users.html" class="nav-auth">Uživatelé</a>
+        <a href="#" class="nav-auth" id="nav-username" style="color:var(--muted);cursor:default"></a>
+        <a href="#" class="nav-auth btn btn-ghost btn-sm" onclick="logout()">Odhlásit</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div id="profile-content">
+        <div class="empty">Načítám...</div>
+    </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+    requireAuth();
+    setupNav();
+
+    const params = new URLSearchParams(location.search);
+    const userId = params.get('id');
+    if (!userId) window.location.href = 'users.html';
+
+    async function loadProfile() {
+        const el = document.getElementById('profile-content');
+        try {
+            const data = await apiFetch(`/users/${userId}`);
+            const u = data.user;
+
+            const initials = u.first_name[0] + u.last_name[0];
+
+            let html = `
+            <div class="card" style="display:flex;align-items:center;gap:20px">
+                <div class="avatar" style="width:56px;height:56px;font-size:20px;flex-shrink:0">${initials}</div>
+                <div>
+                    <div style="font-size:19px;font-weight:700">${u.first_name} ${u.last_name}</div>
+                    <div style="color:var(--muted);font-size:14px;margin-top:3px">
+                        @${u.username} · ${u.age} let
+                    </div>
+                    <div style="color:var(--muted);font-size:12px;margin-top:3px">
+                        Člen od ${formatDate(u.created_at)}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-label">Příspěvky (${data.own_posts.length})</div>`;
+
+            if (data.own_posts.length) {
+                html += data.own_posts.map(p => `
+                <div class="post-card">
+                    <div class="post-title">${p.title}</div>
+                    <div class="post-body">${p.body}</div>
+                    <div class="post-actions" style="margin-top:10px;padding-top:10px">
+                        <span class="like-btn" style="cursor:default">♥ ${p.like_count}</span>
+                        <span class="comment-count">💬 ${p.comment_count}</span>
+                        <span class="comment-count" style="margin-left:auto">${formatDate(p.created_at)}</span>
+                    </div>
+                </div>`).join('');
+            } else {
+                html += '<div class="empty">Žádné příspěvky.</div>';
+            }
+
+            el.innerHTML = html;
+        } catch (err) {
+            el.innerHTML = `<div class="empty">${err.message}</div>`;
+        }
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>
